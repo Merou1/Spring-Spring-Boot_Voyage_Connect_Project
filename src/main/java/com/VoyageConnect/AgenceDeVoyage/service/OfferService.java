@@ -41,6 +41,18 @@ public class OfferService {
 	        offer.getOfferPrice()
 	    );
 	}
+	public Optional<OfferDTO> getOfferByIddto(Long id) {
+        return offerRepository.findById(id).map(offer -> {
+            OfferDTO offerDTO = new OfferDTO();
+            offerDTO.setId(offer.getId());
+            offerDTO.setDestinationId(offer.getDestination().getId());
+            offerDTO.setFlightId(offer.getFlight().getId());
+            offerDTO.setHotelId(offer.getHotel() != null ? offer.getHotel().getId() : null); // Handle null
+            offerDTO.setOfferDetails(offer.getOfferDetails());
+            offerDTO.setOfferPrice(offer.getOfferPrice());
+            return offerDTO;
+        });
+    }
 
 	public List<OfferDTO> getAllOffers() {
 	    return offerRepository.findAll().stream()

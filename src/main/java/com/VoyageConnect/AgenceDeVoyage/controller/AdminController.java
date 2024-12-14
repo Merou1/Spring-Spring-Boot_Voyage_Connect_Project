@@ -117,11 +117,11 @@ public class AdminController {
 		return offerService.getAllOffers();
 	}
 
-	@GetMapping("/offer/{id}")
-	public ResponseEntity<Optional<Offer>> getOfferById(@PathVariable Long id) {
-		Optional<Offer> offer = offerService.getOfferById(id);
-		return offer.isPresent() ? ResponseEntity.ok(offer) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-	}
+	 @GetMapping("/offer/{id}")
+	    public ResponseEntity<OfferDTO> getOfferByIddto(@PathVariable Long id) {
+	        Optional<OfferDTO> offerDTO = offerService.getOfferByIddto(id);
+	        return offerDTO.isPresent() ? ResponseEntity.ok(offerDTO.get()) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+	    }
 
 	@PutMapping("/offer/{id}")
 	public ResponseEntity<Offer> updateOffer(@PathVariable Long id, @RequestBody Offer offer) {
