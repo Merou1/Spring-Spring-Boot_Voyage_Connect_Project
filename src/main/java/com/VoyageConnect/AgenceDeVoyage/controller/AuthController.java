@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
+@CrossOrigin(origins = "http://localhost:5173") 
 public class AuthController {
 
 	private final UserService userService;
@@ -19,8 +20,8 @@ public class AuthController {
 	}
 
 	@PostMapping("/register")
-	public ResponseEntity<Map<String, String>> register(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
-		userService.registerUser(username, password, role);
+	public ResponseEntity<Map<String, String>> register(@RequestParam String username,@RequestParam String fullName, @RequestParam String password, @RequestParam String role) {
+		userService.registerUser(username,fullName, password, role);
 		 Map<String, String> response = new HashMap<>();
 		    response.put("message", "User registered successfully!");
 

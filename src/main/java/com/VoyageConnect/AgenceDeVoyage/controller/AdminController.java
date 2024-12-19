@@ -29,6 +29,7 @@ import java.util.stream.Collectors;
 
 @RestController //rest kayred json donc atkhdem bfrawework flfront , controller nishan kayred html atkhdem bih b thymleaf
 @RequestMapping("/admin")
+@CrossOrigin(origins = "http://localhost:3000") 
 public class AdminController {
 
 	@Autowired

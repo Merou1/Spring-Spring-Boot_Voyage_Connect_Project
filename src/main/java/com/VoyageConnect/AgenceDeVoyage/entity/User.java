@@ -22,8 +22,19 @@ public class User {
 
     @Column(unique = true, nullable = false)
     private String username;
+    
+    @Column( nullable = false)
+    private String fullName;
 
-    @Column(nullable = false)
+    public String getFullName() {
+		return fullName;
+	}
+
+	public void setFullName(String fullName) {
+		this.fullName = fullName;
+	}
+
+	@Column(nullable = false)
     private String password;
 
     @ManyToMany(fetch = FetchType.EAGER)
@@ -65,6 +76,20 @@ public class User {
 	public void setRoles(Set<Role> roles) {
 		this.roles = roles;
 	}
+
+	public User(Long id, String username, String fullName, String password, Set<Role> roles) {
+		super();
+		this.id = id;
+		this.username = username;
+		this.fullName = fullName;
+		this.password = password;
+		this.roles = roles;
+	}
+
+	public User() {
+		super();
+	}
+	
     
     
 

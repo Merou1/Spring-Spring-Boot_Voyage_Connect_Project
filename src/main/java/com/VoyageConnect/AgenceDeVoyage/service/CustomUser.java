@@ -18,9 +18,17 @@ public class CustomUser implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return user.getRoles().stream()
-            .map(role -> new SimpleGrantedAuthority(role.getName()))
+            .map(role -> {
+                String roleName = role.getName();
+                if (!roleName.startsWith("ROLE_")) {
+                    roleName = "ROLE_" + roleName;
+                }
+                System.out.println("Assigned Role: " + roleName); // Debug log to verify the role name
+                return new SimpleGrantedAuthority(roleName);
+            })
             .collect(Collectors.toList());
     }
+
 
     @Override
     public String getPassword() {

@@ -31,7 +31,7 @@ public class UserService {
 	
 	
 
-	public void registerUser(String username, String password, String roleName) {
+	public void registerUser(String username,String fullName, String password, String roleName) {
 	    Optional<User> existingUser = userRepository.findByUsername(username);
 	    if (existingUser.isPresent()) {
 	        throw new IllegalArgumentException("Username already taken: " + username);
@@ -42,8 +42,9 @@ public class UserService {
 
 	    User user = new User();
 	    user.setUsername(username);
-	    user.setPassword(passwordEncoder.encode(password));  // Encoding the password before saving
-	    user.setRoles(Set.of(role));  // Assigning the role
+	    user.setFullName(fullName);
+	    user.setPassword(passwordEncoder.encode(password));  
+	    user.setRoles(Set.of(role));  
 
 	    userRepository.save(user);
 	}

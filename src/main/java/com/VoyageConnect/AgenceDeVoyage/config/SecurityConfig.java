@@ -29,74 +29,68 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class SecurityConfig implements WebMvcConfigurer {
 
-    private final CustomUserDetailsService customUserDetailsService;
+	private final CustomUserDetailsService customUserDetailsService;
 
-    public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
-        this.customUserDetailsService = customUserDetailsService;
-    }
+	public SecurityConfig(CustomUserDetailsService customUserDetailsService) {
+		this.customUserDetailsService = customUserDetailsService;
+	}
 
-    // Configure password encoder
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
+	// Configure password encoder
+	@Bean
+	public PasswordEncoder passwordEncoder() {
+		return new BCryptPasswordEncoder();
+	}
 
-    // Authentication manager configuration
-    @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder = 
-            http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
-    }
-    
-    // Configure CORS settings
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        registry.addMapping("/**")
-                .allowedOrigins("http://localhost:4200")  // Allow frontend origin
-                .allowedMethods("GET", "POST", "PUT", "DELETE")  // Allow necessary HTTP methods
-                .allowedHeaders("*")  // Allow all headers
-                .allowCredentials(true);  // Allow credentials (cookies, headers)
-    }
+	// Authentication manager configuration
+	@Bean
+	public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
+		AuthenticationManagerBuilder authenticationManagerBuilder = http
+				.getSharedObject(AuthenticationManagerBuilder.class);
+		authenticationManagerBuilder.userDetailsService(customUserDetailsService).passwordEncoder(passwordEncoder());
+		return authenticationManagerBuilder.build();
+	}
 
+	// Configure CORS settings
+	@Override
+	public void addCorsMappings(CorsRegistry registry) {
+		registry.addMapping("/**").allowedOrigins("http://localhost:5173") // Allow frontend origin
+				.allowedMethods("GET", "POST", "PUT", "DELETE") // Allow necessary HTTP methods
+				.allowedHeaders("*") // Allow all headers
+				.allowCredentials(true); // Allow credentials (cookies, headers)
+	}
 
-    // Security filter configuration
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf().disable()  // Disable CSRF for debugging; re-enable in production
-            .authorizeHttpRequests()
-                .requestMatchers("/auth/register", "/login").permitAll()  // Allow login and register publicly
-                .requestMatchers("/admin/**").hasRole("ADMIN")
-                .requestMatchers("/client/**").hasRole("CLIENT")
-                .anyRequest().authenticated()
-            .and()
-            .formLogin()
-            .loginProcessingUrl("/login")
-            .successHandler((request, response, authentication) -> {
-                response.setContentType("application/json");
-                response.getWriter().write("{\"message\": \"Login Successful\"}");
-                response.getWriter().flush();
-            })
-            .failureHandler((request, response, exception) -> {
-                response.setContentType("application/json");
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.getWriter().write("{\"error\": \"Login Failed\", \"message\": \"" + exception.getMessage() + "\"}");
-                response.getWriter().flush();
-            })
+	// Security filter configuration
+	@Bean
+	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+		http.cors().and().csrf().disable() // Disable CSRF for debugging; re-enable in production
+				.authorizeHttpRequests().requestMatchers("/auth/register", "/login").permitAll() // Allow login and
+																									// register publicly
+				.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/client/**").hasRole("CLIENT")
+				.anyRequest().authenticated().and().formLogin().loginProcessingUrl("/login")
+				.successHandler((request, response, authentication) -> {
+	                response.setContentType("application/json");
+	                // Get the user's role from the authentication object
+	                String userRole = authentication.getAuthorities().stream()
+	                        .map(grantedAuthority -> grantedAuthority.getAuthority())
+	                        .filter(role -> role.startsWith("ROLE_"))
+	                        .findFirst()
+	                        .orElse("ROLE_UNKNOWN");
 
+	                // Return a JSON response with a message and the user's role
+	                String jsonResponse = "{\"message\": \"Login Successful\", \"role\": \"" + userRole + "\"}";
+	                response.getWriter().write(jsonResponse);
+	                response.getWriter().flush();
+	            }).failureHandler((request, response, exception) -> {
+					response.setContentType("application/json");
+					response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+					response.getWriter()
+							.write("{\"error\": \"Login Failed\", \"message\": \"" + exception.getMessage() + "\"}");
+					response.getWriter().flush();
+				})
 
+				.and().logout().logoutUrl("/logout").logoutSuccessUrl("/login?logout=true").permitAll();
 
-            .and()
-            .logout()
-                .logoutUrl("/logout")
-                .logoutSuccessUrl("/login?logout=true")
-                .permitAll();
-
-        return http.build();
-    }
-
-
+		return http.build();
+	}
 
 }
