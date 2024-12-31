@@ -25,10 +25,11 @@ public class HotelController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Hotel> getHotelById(@PathVariable Long id) {
-		Optional<Hotel> hotel = hotelService.getHotelById(id);
-		return hotel.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
-	}
+    public ResponseEntity<HotelDTO> getHotelById(@PathVariable Long id) {
+        Optional<Hotel> hotel = hotelService.getHotelById(id);
+        return hotel.map(h -> ResponseEntity.ok(hotelService.mapToHotelDTO(h)))
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 
 	@GetMapping("/offer/{offerId}")
 	public List<Hotel> getHotelsForOffer(@PathVariable Long offerId) {

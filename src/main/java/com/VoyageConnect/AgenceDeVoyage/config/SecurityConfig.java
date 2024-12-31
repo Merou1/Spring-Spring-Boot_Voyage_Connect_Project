@@ -76,8 +76,12 @@ public class SecurityConfig implements WebMvcConfigurer {
 	                        .findFirst()
 	                        .orElse("ROLE_UNKNOWN");
 
-	                // Return a JSON response with a message and the user's role
-	                String jsonResponse = "{\"message\": \"Login Successful\", \"role\": \"" + userRole + "\"}";
+	                // Retrieve the JSESSIONID cookie
+	                String jsessionId = request.getSession().getId();
+
+	                // Return a JSON response with the message, role, and JSESSIONID
+	                String jsonResponse = "{\"message\": \"Login Successful\", \"role\": \"" + userRole + 
+	                                      "\", \"jsessionId\": \"" + jsessionId + "\"}";
 	                response.getWriter().write(jsonResponse);
 	                response.getWriter().flush();
 	            }).failureHandler((request, response, exception) -> {
@@ -88,7 +92,8 @@ public class SecurityConfig implements WebMvcConfigurer {
 					response.getWriter().flush();
 				})
 
-				.and().logout().logoutUrl("/logout").logoutSuccessUrl("/login?logout=true").permitAll();
+				.and().logout().logoutUrl("/logout").invalidateHttpSession(true)
+			    .deleteCookies("JSESSIONID").logoutSuccessUrl("/login?logout=true").permitAll();
 
 		return http.build();
 	}

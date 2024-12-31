@@ -25,10 +25,12 @@ public class FlightController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Flight> getFlightById(@PathVariable Long id) {
-		Optional<Flight> flight = flightService.getFlightById(id);
-		return flight.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+	public ResponseEntity<FlightDTO> getFlightById(@PathVariable Long id) {
+	    Optional<Flight> flight = flightService.getFlightById(id);
+	    return flight.map(f -> ResponseEntity.ok(flightService.mapToFlightDTO(f)))
+	                 .orElseGet(() -> ResponseEntity.notFound().build());
 	}
+
 
 	@GetMapping("/offer/{offerId}")
 	public List<Flight> getFlightsForOffer(@PathVariable Long offerId) {
