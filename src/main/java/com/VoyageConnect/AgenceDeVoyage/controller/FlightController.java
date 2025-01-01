@@ -1,7 +1,9 @@
 package com.VoyageConnect.AgenceDeVoyage.controller;
 
 import com.VoyageConnect.AgenceDeVoyage.Dtos.FlightDTO;
+import com.VoyageConnect.AgenceDeVoyage.entity.Destination;
 import com.VoyageConnect.AgenceDeVoyage.entity.Flight;
+import com.VoyageConnect.AgenceDeVoyage.repository.DestinationRepository;
 import com.VoyageConnect.AgenceDeVoyage.service.FlightService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -18,6 +20,9 @@ public class FlightController {
 
 	@Autowired
 	private FlightService flightService;
+	
+	@Autowired
+	private DestinationRepository destinationRepository;
 
 	@GetMapping
 	public List<FlightDTO> getAllFlights() {
@@ -39,9 +44,20 @@ public class FlightController {
 
 	@PostMapping
 	public ResponseEntity<Flight> createFlight(@RequestBody Flight flight) {
-		Flight savedFlight = flightService.saveFlight(flight);
-		return ResponseEntity.ok(savedFlight);
+	    Long destinationId = flight.getDestination().getId(); // Get destination ID from the flight object
+	    Optional<Destination> destinationOptional = destinationRepository.findById(destinationId);
+	    
+	    if (destinationOptional.isEmpty()) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Bad request if destination doesn't exist
+	    }
+
+	    flight.setDestination(destinationOptional.get()); // Set the destination for the flight
+	    Flight savedFlight = flightService.saveFlight(flight); // Save the flight
+
+	    return ResponseEntity.ok(savedFlight);
 	}
+
+
 
 	@PutMapping("/{id}")
 	public ResponseEntity<Flight> updateFlight(@PathVariable Long id, @RequestBody Flight flightDetails) {

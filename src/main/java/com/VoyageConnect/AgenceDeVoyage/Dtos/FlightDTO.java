@@ -1,5 +1,7 @@
 package com.VoyageConnect.AgenceDeVoyage.Dtos;
 
+import com.VoyageConnect.AgenceDeVoyage.entity.Destination;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -11,18 +13,19 @@ public class FlightDTO {
     private Long id;
     private String airline;
     private String departure;
-    private String destination;
+    private Long destinationId;  // This should be a Long referring to destination_id
     private String departureDate;
     private String returnDate;
     private Double price;
-    private Long offerId; // Avoid direct Offer reference
-	public FlightDTO(Long id, String airline, String departure, String destination, String departureDate,
+    private Long offerId; 
+
+	public FlightDTO(Long id, String airline, String departure, Long destinationId, String departureDate,
 			String returnDate, Double price, Long offerId) {
 		super();
 		this.id = id;
 		this.airline = airline;
 		this.departure = departure;
-		this.destination = destination;
+		this.destinationId = destinationId;
 		this.departureDate = departureDate;
 		this.returnDate = returnDate;
 		this.price = price;
@@ -49,11 +52,12 @@ public class FlightDTO {
 	public void setDeparture(String departure) {
 		this.departure = departure;
 	}
-	public String getDestination() {
-		return destination;
+	
+	public Long getDestinationId() {
+		return destinationId;
 	}
-	public void setDestination(String destination) {
-		this.destination = destination;
+	public void setDestinationId(Long destinationId) {
+		this.destinationId = destinationId;
 	}
 	public String getDepartureDate() {
 		return departureDate;

@@ -68,6 +68,8 @@ public class OfferService {
 		return offerRepository.save(offer);
 	}
 
+
+
 	public void deleteOffer(Long id) {
 		offerRepository.deleteById(id);
 	}
@@ -132,4 +134,5 @@ public class OfferService {
             throw new EntityNotFoundException("Offer with ID " + offerId + " not found.");
         }
     }
+	
 }

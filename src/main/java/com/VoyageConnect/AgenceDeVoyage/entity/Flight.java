@@ -27,8 +27,9 @@ public class Flight {
     @Column(nullable = false)
     private String departure;
 
-    @Column(nullable = false)
-    private String destination;
+    @ManyToOne
+    @JoinColumn(name = "destination_id", nullable = false)
+    private Destination destination;
 
     @Column(nullable = false)
     private String departureDate;
@@ -47,7 +48,7 @@ public class Flight {
 		super();
 	}
 
-	public Flight(Long id, String airline, String departure, String destination, String departureDate,
+	public Flight(Long id, String airline, String departure, Destination destination, String departureDate,
 			String returnDate, Double price, Offer offer) {
 		super();
 		this.id = id;
@@ -84,11 +85,11 @@ public class Flight {
 		this.departure = departure;
 	}
 
-	public String getDestination() {
+	public Destination getDestination() {
 		return destination;
 	}
 
-	public void setDestination(String destination) {
+	public void setDestination(Destination destination) {
 		this.destination = destination;
 	}
 

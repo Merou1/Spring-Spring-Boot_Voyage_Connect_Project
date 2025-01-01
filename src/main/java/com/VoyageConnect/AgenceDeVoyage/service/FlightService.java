@@ -1,7 +1,9 @@
 package com.VoyageConnect.AgenceDeVoyage.service;
 
+import com.VoyageConnect.AgenceDeVoyage.entity.Destination;
 import com.VoyageConnect.AgenceDeVoyage.entity.Flight;
 import com.VoyageConnect.AgenceDeVoyage.entity.Offer;
+import com.VoyageConnect.AgenceDeVoyage.repository.DestinationRepository;
 import com.VoyageConnect.AgenceDeVoyage.repository.FlightRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +20,8 @@ public class FlightService {
     private FlightRepository flightRepository;
     @Autowired
     private OfferService offerService;
+    @Autowired
+    private DestinationRepository destinationRepository;
     
 
     public FlightDTO mapToFlightDTO(Flight flight) {
@@ -25,13 +29,14 @@ public class FlightService {
             flight.getId(),
             flight.getAirline(),
             flight.getDeparture(),
-            flight.getDestination(),
+            flight.getDestination() != null ? flight.getDestination().getId() : null,  // Map destination ID
             flight.getDepartureDate(),
             flight.getReturnDate(),
             flight.getPrice(),
             flight.getOffer() != null ? flight.getOffer().getId() : null
         );
     }
+
 
     public List<FlightDTO> getAllFlights() {
         return flightRepository.findAll().stream()
@@ -49,17 +54,43 @@ public class FlightService {
     }
 
     public Flight saveFlight(Flight flight) {
-        // Save the flight
+        // Validate destination
+        if (flight.getDestination() == null || flight.getDestination().getId() == null) {
+            throw new RuntimeException("Destination must not be null");
+        }
+        Long destinationId = flight.getDestination().getId();
+        Optional<Destination> destinationOptional = destinationRepository.findById(destinationId);
+        if (destinationOptional.isEmpty()) {
+            throw new RuntimeException("Destination not found for id " + destinationId);
+        }
+        flight.setDestination(destinationOptional.get());
+
+        // Validate offer
+        if (flight.getOffer() == null || flight.getOffer().getId() == null) {
+            throw new RuntimeException("Offer must not be null");
+        }
+
+        // Save the flight first
         Flight savedFlight = flightRepository.save(flight);
 
-        // Ensure the flight has an associated offer and update the offer's flight reference
-        Offer offer = savedFlight.getOffer();
-        if (offer != null) {
-            offerService.updateFlightInOffer(offer.getId(), savedFlight.getId());
+        // Update the offer's flight reference only after successful save
+        if (savedFlight.getOffer() != null) {
+            try {
+                offerService.updateFlightInOffer(savedFlight.getOffer().getId(), savedFlight.getId());
+            } catch (Exception e) {
+                // If updating the offer fails, we might want to roll back the flight save
+                flightRepository.delete(savedFlight);
+                throw new RuntimeException("Failed to update offer with flight: " + e.getMessage());
+            }
         }
 
         return savedFlight;
     }
+
+
+
+
+    
 
     public void deleteFlight(Long id) {
         flightRepository.deleteById(id);
