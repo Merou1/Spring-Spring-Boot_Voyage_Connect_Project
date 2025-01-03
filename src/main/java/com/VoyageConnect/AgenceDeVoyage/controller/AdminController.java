@@ -124,44 +124,48 @@ public class AdminController {
 	        return offerDTO.isPresent() ? ResponseEntity.ok(offerDTO.get()) : ResponseEntity.status(HttpStatus.NOT_FOUND).build();
 	    }
 
-	@PutMapping("/offer/{id}")
-	public ResponseEntity<Offer> updateOffer(@PathVariable Long id, @RequestBody Offer offer) {
-		// Check if the offer exists
-		Optional<Offer> existingOffer = offerService.getOfferById(id);
-		if (!existingOffer.isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Offer not found
-		}
+	 @PutMapping("/offer/{id}")
+	 public ResponseEntity<Offer> updateOffer(@PathVariable Long id, @RequestBody Offer offer) {
+	     // Check if the offer exists
+	     Optional<Offer> existingOfferOpt = offerService.getOfferById(id);
+	     if (!existingOfferOpt.isPresent()) {
+	         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+	     }
+	     
+	     Offer existingOffer = existingOfferOpt.get();
 
-		// Ensure the destination exists and is valid
-		if (offer.getDestination() == null
-				|| !destinationService.getDestinationById(offer.getDestination().getId()).isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Destination must exist
-		}
+	     // Preserve existing flight and hotel
+	     offer.setFlight(existingOffer.getFlight());
+	     offer.setHotel(existingOffer.getHotel());
+	     
+	     // Ensure the destination exists and is valid
+	     if (offer.getDestination() == null
+	             || !destinationService.getDestinationById(offer.getDestination().getId()).isPresent()) {
+	         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	     }
 
-		// Set the offer id to maintain consistency
-		offer.setId(id);
+	     // Set the offer id to maintain consistency
+	     offer.setId(id);
 
-		// Set the destination explicitly to ensure it's not null
-		Destination destination = offer.getDestination();
-		if (destination != null && destination.getId() != null) {
-			Optional<Destination> existingDestination = destinationService.getDestinationById(destination.getId());
-			if (existingDestination.isPresent()) {
-				// Only update the destination if necessary and all required fields are present
-				Destination updatedDestination = existingDestination.get();
-				if (updatedDestination.getCountry() == null) {
-					return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Missing country field
-				}
-				offer.setDestination(updatedDestination);
-			} else {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null); // Destination not found
-			}
-		}
+	     // Set the destination explicitly to ensure it's not null
+	     Destination destination = offer.getDestination();
+	     if (destination != null && destination.getId() != null) {
+	         Optional<Destination> existingDestination = destinationService.getDestinationById(destination.getId());
+	         if (existingDestination.isPresent()) {
+	             Destination updatedDestination = existingDestination.get();
+	             if (updatedDestination.getCountry() == null) {
+	                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	             }
+	             offer.setDestination(updatedDestination);
+	         } else {
+	             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+	         }
+	     }
 
-		// Save the updated offer and return the response
-		Offer savedOffer = offerService.saveOffer(offer);
-		return ResponseEntity.ok(savedOffer);
-	}
-
+	     // Save the updated offer and return the response
+	     Offer savedOffer = offerService.saveOffer(offer);
+	     return ResponseEntity.ok(savedOffer);
+	 }
 	@DeleteMapping("/offer/{id}")
 	public ResponseEntity<String> deleteOffer(@PathVariable Long id) {
 		if (reservationService.hasReservationsForOffer(id)) {
