@@ -25,7 +25,6 @@ public class Offer {
     @JoinColumn(name = "flight_id", referencedColumnName = "id")
     private Flight flight;
 
-
     @OneToOne
     @JoinColumn(name = "hotel_id", nullable = true)
     private Hotel hotel;

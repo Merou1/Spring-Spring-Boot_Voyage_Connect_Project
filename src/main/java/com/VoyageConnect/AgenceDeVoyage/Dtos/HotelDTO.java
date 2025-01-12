@@ -14,8 +14,10 @@ public class HotelDTO {
     private Integer stars;
     private Double pricePerNight;
     private Long offerId; // Avoid direct Offer reference
+    private String imageUrl;
+
     
-	public HotelDTO(Long id, String name, String location, Integer stars, Double pricePerNight, Long offerId) {
+	public HotelDTO(Long id, String name, String location, Integer stars, Double pricePerNight, Long offerId,String imageUrl) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -23,6 +25,7 @@ public class HotelDTO {
 		this.stars = stars;
 		this.pricePerNight = pricePerNight;
 		this.offerId = offerId;
+        this.imageUrl = imageUrl;
 	}
 	public HotelDTO() {
 		super();
@@ -62,6 +65,13 @@ public class HotelDTO {
 	}
 	public void setOfferId(Long offerId) {
 		this.offerId = offerId;
+	}
+	public String getImageUrl() {
+	        return imageUrl;
+	}
+	    
+	public void setImageUrl(String imageUrl) {
+	        this.imageUrl = imageUrl;
 	}
     
     

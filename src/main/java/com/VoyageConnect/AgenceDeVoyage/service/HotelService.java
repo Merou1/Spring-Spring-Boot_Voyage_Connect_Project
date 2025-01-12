@@ -29,7 +29,8 @@ public class HotelService {
             hotel.getLocation(),
             hotel.getStars(),
             hotel.getPricePerNight(),
-            hotel.getOffer() != null ? hotel.getOffer().getId() : null
+            hotel.getOffer() != null ? hotel.getOffer().getId() : null,
+            hotel.getImageUrl()
         );
     }
 

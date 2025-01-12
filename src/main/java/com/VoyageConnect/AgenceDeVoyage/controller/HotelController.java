@@ -52,6 +52,7 @@ public class HotelController {
 			hotel.setStars(hotelDetails.getStars());
 			hotel.setPricePerNight(hotelDetails.getPricePerNight());
 			hotel.setOffer(hotelDetails.getOffer());
+            hotel.setImageUrl(hotelDetails.getImageUrl()); 
 			hotelService.saveHotel(hotel);
 			return ResponseEntity.ok(hotel);
 		} else {

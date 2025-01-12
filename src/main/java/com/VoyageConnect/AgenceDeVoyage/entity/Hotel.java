@@ -32,8 +32,11 @@ public class Hotel {
     @ManyToOne
     @JoinColumn(name = "offer_id", nullable = false)
     private Offer offer;
+    
+    @Column(columnDefinition = "LONGTEXT")
+    private String imageUrl;
 
-	public Hotel(Long id, String name, String location, Integer stars, Double pricePerNight, Offer offer) {
+	public Hotel(Long id, String name, String location, Integer stars, Double pricePerNight, Offer offer, String imageUrl) {
 		super();
 		this.id = id;
 		this.name = name;
@@ -41,6 +44,7 @@ public class Hotel {
 		this.stars = stars;
 		this.pricePerNight = pricePerNight;
 		this.offer = offer;
+        this.imageUrl = imageUrl;
 	}
 
 	public Hotel() {
@@ -95,5 +99,12 @@ public class Hotel {
 		this.offer = offer;
 	}
     
+	public String getImageUrl() {
+        return imageUrl;
+    }
+    
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
+    }
     
 }
