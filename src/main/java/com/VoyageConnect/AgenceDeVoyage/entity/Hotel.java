@@ -35,6 +35,10 @@ public class Hotel {
     
     @Column(columnDefinition = "LONGTEXT")
     private String imageUrl;
+    
+    @Column(nullable = true)
+    private String imageReference;
+
 
 	public Hotel(Long id, String name, String location, Integer stars, Double pricePerNight, Offer offer, String imageUrl) {
 		super();

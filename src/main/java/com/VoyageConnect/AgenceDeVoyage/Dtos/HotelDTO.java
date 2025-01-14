@@ -13,7 +13,7 @@ public class HotelDTO {
     private String location;
     private Integer stars;
     private Double pricePerNight;
-    private Long offerId; // Avoid direct Offer reference
+    private Long offerId; 
     private String imageUrl;
 
     

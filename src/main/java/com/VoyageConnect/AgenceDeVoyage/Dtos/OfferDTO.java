@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 public class OfferDTO {
     private Long id;
     private Long destinationId;
-    private Long flightId; // Avoid direct Flight reference
-    private Long hotelId;  // Avoid direct Hotel reference
+    private Long flightId; 
+    private Long hotelId;  
     private String offerDetails;
     private Double offerPrice;
 	public OfferDTO() {
