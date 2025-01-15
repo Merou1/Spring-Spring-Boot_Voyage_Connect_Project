@@ -3,6 +3,7 @@ package com.VoyageConnect.AgenceDeVoyage.controller;
 import com.VoyageConnect.AgenceDeVoyage.Dtos.FlightDTO;
 import com.VoyageConnect.AgenceDeVoyage.Dtos.HotelDTO;
 import com.VoyageConnect.AgenceDeVoyage.Dtos.OfferDTO;
+import com.VoyageConnect.AgenceDeVoyage.Dtos.ReservationDTO;
 import com.VoyageConnect.AgenceDeVoyage.entity.Destination;
 import com.VoyageConnect.AgenceDeVoyage.entity.Flight;
 import com.VoyageConnect.AgenceDeVoyage.entity.Hotel;
@@ -22,7 +23,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -178,49 +184,85 @@ public class AdminController {
 
 	// Reservation CRUD
 	@PostMapping("/reservation")
-	public ResponseEntity<Reservation> createReservation(@RequestBody Reservation reservation) {
-		// Check if the Offer ID is provided and valid
-		if (reservation.getOffer() == null || reservation.getOffer().getId() == null) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+	public ResponseEntity<Reservation> createReservation(
+	    @RequestParam("userId") Long userId,
+	    @RequestParam("offerId") Long offerId,
+	    @RequestParam("reservationDate") String reservationDate,
+	    @RequestParam(value = "receipt", required = false) MultipartFile receipt) {
 
-		// Fetch the offer from the database
-		Optional<Offer> offer = offerService.getOfferById(reservation.getOffer().getId());
-		if (!offer.isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+	    // Validate offer
+	    Optional<Offer> offer = offerService.getOfferById(offerId);
+	    if (!offer.isPresent()) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	    }
 
-		reservation.setOffer(offer.get());
+	    // Validate user
+	    Optional<User> user = userService.getUserById(userId);
+	    if (!user.isPresent()) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+	    }
 
-		// Check if the user ID is provided in the request
-		if (reservation.getUser() == null || reservation.getUser().getId() == null) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+	    // Save receipt if provided
+	    String receiptPath = null;
+	    if (receipt != null && !receipt.isEmpty()) {
+	        String fileName = System.currentTimeMillis() + "_" + receipt.getOriginalFilename();
+	        String uploadDir = "uploads/receipts/";
+	        Path filePath = Paths.get(uploadDir, fileName);
 
-		// Fetch the user from the database using the provided user ID
-		Optional<User> user = userService.getUserById(reservation.getUser().getId());
-		if (!user.isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
-		}
+	        try {
+	            Files.createDirectories(filePath.getParent());
+	            Files.write(filePath, receipt.getBytes());
+	            receiptPath = filePath.toString();
+	        } catch (IOException e) {
+	            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+	        }
+	    }
 
-		reservation.setUser(user.get());
+	    // Create and save reservation
+	    Reservation reservation = new Reservation(user.get(), offer.get(), reservationDate, receiptPath);
+	    Reservation savedReservation = reservationService.saveReservation(reservation);
 
-		// Save the reservation and return the response
-		Reservation savedReservation = reservationService.saveReservation(reservation);
-		return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
+	    return ResponseEntity.status(HttpStatus.CREATED).body(savedReservation);
 	}
 
+
 	@GetMapping("/reservations")
-	public List<Reservation> getAllReservations() {
-		return reservationService.getAllReservations();
+	public ResponseEntity<List<ReservationDTO>> getAllReservations() {
+	    List<Reservation> reservations = reservationService.getAllReservations();
+
+	    // Convert Reservation entities to ReservationDTO
+	    List<ReservationDTO> reservationDTOs = reservations.stream().map(reservation -> 
+	        new ReservationDTO(
+	            reservation.getId(),
+	            reservation.getReservationDate(),
+	            reservation.getOffer().getDestination().getName(),
+	            reservation.getOffer().getHotel() != null ? reservation.getOffer().getHotel().getName() : "No Hotel",
+	            reservation.getOffer().getOfferPrice()
+	        )
+	    ).collect(Collectors.toList());
+
+	    return ResponseEntity.ok(reservationDTOs);
 	}
 
 	@GetMapping("/reservation/{id}")
-	public ResponseEntity<Optional<Reservation>> getReservationById(@PathVariable Long id) {
-		Optional<Reservation> reservation = reservationService.getReservationById(id);
-		return reservation.isPresent() ? ResponseEntity.ok(reservation)
-				: ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+	public ResponseEntity<ReservationDTO> getReservationById(@PathVariable Long id) {
+	    Optional<Reservation> reservation = reservationService.getReservationById(id);
+	    
+	    if (reservation.isPresent()) {
+	        // Convert Reservation entity to ReservationDTO
+	        ReservationDTO reservationDTO = new ReservationDTO(
+	            reservation.get().getId(),
+	            reservation.get().getReservationDate(),
+	            reservation.get().getOffer().getDestination().getName(),
+	            reservation.get().getOffer().getHotel() != null ? reservation.get().getOffer().getHotel().getName() : "No Hotel",
+	            reservation.get().getOffer().getOfferPrice()
+	        );
+	        return ResponseEntity.ok(reservationDTO);
+	    } else {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+	    }
 	}
+
 
 	@PutMapping("/reservation/{id}")
 	public ResponseEntity<Reservation> updateReservation(@PathVariable Long id, @RequestBody Reservation reservation) {

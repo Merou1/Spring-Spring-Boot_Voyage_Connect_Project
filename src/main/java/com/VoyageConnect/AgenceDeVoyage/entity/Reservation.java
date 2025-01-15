@@ -25,11 +25,15 @@ public class Reservation {
 
     @Column(nullable = false)
     private String reservationDate;
+    
+    @Column(nullable = true)
+    private String receiptPath;
 
-    public Reservation(User user, Offer offer, String reservationDate) {
+    public Reservation(User user, Offer offer, String reservationDate, String receiptPath) {
         this.user = user;
         this.offer = offer;
         this.reservationDate = reservationDate;
+        this.receiptPath = receiptPath;
     }
 
 	public Reservation() {
@@ -66,6 +70,14 @@ public class Reservation {
 
 	public void setReservationDate(String reservationDate) {
 		this.reservationDate = reservationDate;
+	}
+
+	public String getReceiptPath() {
+		return receiptPath;
+	}
+
+	public void setReceiptPath(String receiptPath) {
+		this.receiptPath = receiptPath;
 	}
     
 }

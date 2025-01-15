@@ -50,6 +50,21 @@ public class Hotel {
 		this.offer = offer;
         this.imageUrl = imageUrl;
 	}
+	
+
+	public Hotel(Long id, String name, String location, Integer stars, Double pricePerNight, Offer offer,
+			String imageUrl, String imageReference) {
+		super();
+		this.id = id;
+		this.name = name;
+		this.location = location;
+		this.stars = stars;
+		this.pricePerNight = pricePerNight;
+		this.offer = offer;
+		this.imageUrl = imageUrl;
+		this.imageReference = imageReference;
+	}
+
 
 	public Hotel() {
 		super();
@@ -110,5 +125,16 @@ public class Hotel {
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
     }
+
+
+	public String getImageReference() {
+		return imageReference;
+	}
+
+
+	public void setImageReference(String imageReference) {
+		this.imageReference = imageReference;
+	}
+    
     
 }

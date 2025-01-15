@@ -1,6 +1,7 @@
 package com.VoyageConnect.AgenceDeVoyage.service;
 
 import com.VoyageConnect.AgenceDeVoyage.entity.Reservation;
+import com.VoyageConnect.AgenceDeVoyage.entity.User;
 import com.VoyageConnect.AgenceDeVoyage.repository.ReservationRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,4 +34,8 @@ public class ReservationService {
     public boolean hasReservationsForOffer(Long offerId) {
         return reservationRepository.existsByOfferId(offerId);
     }
+    public List<Reservation> getReservationsByUser(User user) {
+        return reservationRepository.findByUserId(user.getId());
+    }
+    
 }

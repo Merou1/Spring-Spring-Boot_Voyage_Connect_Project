@@ -63,7 +63,7 @@ public class SecurityConfig implements WebMvcConfigurer {
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		http.cors().and().csrf().disable() // Disable CSRF for debugging; re-enable in production
-				.authorizeHttpRequests().requestMatchers("/auth/register", "/login").permitAll() // Allow login and
+				.authorizeHttpRequests().requestMatchers("/auth/register", "/login", "/auth/user-details").permitAll() // Allow login and
 																									// register publicly
 				.requestMatchers("/admin/**").hasRole("ADMIN").requestMatchers("/client/**").hasRole("CLIENT")
 				.anyRequest().authenticated().and().formLogin().loginProcessingUrl("/login")

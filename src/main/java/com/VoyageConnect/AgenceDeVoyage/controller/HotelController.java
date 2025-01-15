@@ -7,13 +7,18 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/hotels")
-@CrossOrigin(origins = "http://localhost:5173") 
+@CrossOrigin(origins = "http://localhost:5173")
 public class HotelController {
 
 	@Autowired
@@ -25,11 +30,11 @@ public class HotelController {
 	}
 
 	@GetMapping("/{id}")
-    public ResponseEntity<HotelDTO> getHotelById(@PathVariable Long id) {
-        Optional<Hotel> hotel = hotelService.getHotelById(id);
-        return hotel.map(h -> ResponseEntity.ok(hotelService.mapToHotelDTO(h)))
-                    .orElseGet(() -> ResponseEntity.notFound().build());
-    }
+	public ResponseEntity<HotelDTO> getHotelById(@PathVariable Long id) {
+		Optional<Hotel> hotel = hotelService.getHotelById(id);
+		return hotel.map(h -> ResponseEntity.ok(hotelService.mapToHotelDTO(h)))
+				.orElseGet(() -> ResponseEntity.notFound().build());
+	}
 
 	@GetMapping("/offer/{offerId}")
 	public List<Hotel> getHotelsForOffer(@PathVariable Long offerId) {
@@ -38,9 +43,14 @@ public class HotelController {
 
 	@PostMapping
 	public ResponseEntity<Hotel> createHotel(@RequestBody Hotel hotel) {
-		Hotel savedHotel = hotelService.saveHotel(hotel);
-		return ResponseEntity.ok(savedHotel);
+	    // Ensure that the imageReference is passed in the request body and set
+	    if (hotel.getImageReference() != null) {
+	        hotel.setImageReference(hotel.getImageReference());
+	    }
+	    Hotel savedHotel = hotelService.saveHotel(hotel);
+	    return ResponseEntity.ok(savedHotel);
 	}
+
 
 	@PutMapping("/{id}")
 	public ResponseEntity<Hotel> updateHotel(@PathVariable Long id, @RequestBody Hotel hotelDetails) {
@@ -52,7 +62,7 @@ public class HotelController {
 			hotel.setStars(hotelDetails.getStars());
 			hotel.setPricePerNight(hotelDetails.getPricePerNight());
 			hotel.setOffer(hotelDetails.getOffer());
-            hotel.setImageUrl(hotelDetails.getImageUrl()); 
+			hotel.setImageUrl(hotelDetails.getImageUrl());
 			hotelService.saveHotel(hotel);
 			return ResponseEntity.ok(hotel);
 		} else {
@@ -69,5 +79,27 @@ public class HotelController {
 			return ResponseEntity.ok("Hotel with ID " + id + " has been deleted.");
 		}
 	}
+
+	@PostMapping("/upload-image")
+	public ResponseEntity<String> uploadImage(@RequestParam("image") MultipartFile imageFile) {
+	    try {
+	        String fileName = System.currentTimeMillis() + "_" + imageFile.getOriginalFilename();
+	        Path filePath = Paths.get("uploads/" + fileName);
+
+	        if (!Files.exists(filePath.getParent())) {
+	            Files.createDirectories(filePath.getParent());
+	        }
+
+	        Files.copy(imageFile.getInputStream(), filePath);
+
+	        // Return the relative path as the response
+	        return ResponseEntity.ok(fileName);
+	    } catch (IOException e) {
+	        e.printStackTrace();
+	        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error uploading image.");
+	    }
+	}
+
+
 
 }
