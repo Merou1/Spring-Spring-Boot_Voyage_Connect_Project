@@ -13,28 +13,27 @@ import lombok.Setter;
 @Entity
 @Table(name = "offers")
 public class Offer {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JoinColumn(name = "destination_id",nullable = false)
-    private Destination destination;
-    
-    @OneToOne
-    @JoinColumn(name = "flight_id", referencedColumnName = "id")
-    private Flight flight;
+	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+	@JoinColumn(name = "destination_id", nullable = false)
+	private Destination destination;
 
-    @OneToOne
-    @JoinColumn(name = "hotel_id", nullable = true)
-    private Hotel hotel;
+	@OneToOne
+	@JoinColumn(name = "flight_id", referencedColumnName = "id")
+	private Flight flight;
 
+	@OneToOne
+	@JoinColumn(name = "hotel_id", nullable = true)
+	private Hotel hotel;
 
-    @Column(nullable = false)
-    private String offerDetails;
+	@Column(nullable = false)
+	private String offerDetails;
 
-    @Column(nullable = false)
-    private Double offerPrice;
+	@Column(nullable = false)
+	private Double offerPrice;
 
 	public Offer(Long id, Destination destination, Flight flight, Hotel hotel, String offerDetails, Double offerPrice) {
 		super();
@@ -97,7 +96,5 @@ public class Offer {
 	public void setHotel(Hotel hotel) {
 		this.hotel = hotel;
 	}
-	
-    
-	
+
 }

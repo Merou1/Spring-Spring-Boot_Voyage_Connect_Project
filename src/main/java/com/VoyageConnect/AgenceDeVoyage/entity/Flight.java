@@ -17,32 +17,32 @@ import lombok.Setter;
 @Table(name = "flights")
 
 public class Flight {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
 
-    @Column(nullable = false)
-    private String airline;
+	@Column(nullable = false)
+	private String airline;
 
-    @Column(nullable = false)
-    private String departure;
+	@Column(nullable = false)
+	private String departure;
 
-    @ManyToOne
-    @JoinColumn(name = "destination_id", nullable = false)
-    private Destination destination;
+	@ManyToOne
+	@JoinColumn(name = "destination_id", nullable = false)
+	private Destination destination;
 
-    @Column(nullable = false)
-    private String departureDate;
+	@Column(nullable = false)
+	private String departureDate;
 
-    @Column(nullable = false)
-    private String returnDate;
+	@Column(nullable = false)
+	private String returnDate;
 
-    @Column(nullable = false)
-    private Double price;
+	@Column(nullable = false)
+	private Double price;
 
-    @ManyToOne
-    @JoinColumn(name = "offer_id", nullable = false)
-    private Offer offer;
+	@ManyToOne
+	@JoinColumn(name = "offer_id", nullable = false)
+	private Offer offer;
 
 	public Flight() {
 		super();
@@ -124,6 +124,5 @@ public class Flight {
 	public void setOffer(Offer offer) {
 		this.offer = offer;
 	}
-    
-    
+
 }

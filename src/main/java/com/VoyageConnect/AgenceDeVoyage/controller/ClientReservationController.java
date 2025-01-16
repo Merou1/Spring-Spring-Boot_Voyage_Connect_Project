@@ -22,12 +22,16 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.VoyageConnect.AgenceDeVoyage.Dtos.ReservationDTO;
+import com.VoyageConnect.AgenceDeVoyage.Pdfgenerator.PdfGenerator;
 import com.VoyageConnect.AgenceDeVoyage.entity.Offer;
 import com.VoyageConnect.AgenceDeVoyage.entity.Reservation;
 import com.VoyageConnect.AgenceDeVoyage.entity.User;
+import com.VoyageConnect.AgenceDeVoyage.service.EmailService;
 import com.VoyageConnect.AgenceDeVoyage.service.OfferService;
 import com.VoyageConnect.AgenceDeVoyage.service.ReservationService;
 import com.VoyageConnect.AgenceDeVoyage.service.UserService;
+
+import jakarta.mail.MessagingException;
 
 @RestController
 @RequestMapping("/client")
@@ -42,48 +46,64 @@ public class ClientReservationController {
 
     @Autowired
     private UserService userService;
+    
+    @Autowired
+    private EmailService emailService;
 
- // In ClientReservationController.java
     @PostMapping("/reservation")
     public ResponseEntity<String> createReservation(
             @RequestParam Long userId,
             @RequestParam Long offerId,
             @RequestParam("file") MultipartFile file) {
         try {
-            Optional<User> user = userService.getUserById(userId);
-            Optional<Offer> offer = offerService.getOfferById(offerId);
+            // Fetch user and offer
+            Optional<User> userOptional = userService.getUserById(userId);
+            Optional<Offer> offerOptional = offerService.getOfferById(offerId);
 
-            if (!user.isPresent() || !offer.isPresent()) {
+            if (!userOptional.isPresent() || !offerOptional.isPresent()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid user or offer ID");
             }
 
-            // Create uploads directory if it doesn't exist
+            User user = userOptional.get();
+            Offer offer = offerOptional.get();
+
+            // Save the receipt file
             Path uploadDir = Paths.get("uploads");
             if (!Files.exists(uploadDir)) {
                 Files.createDirectories(uploadDir);
             }
-
-            // Save the receipt file
             String fileName = userId + "_" + offerId + "_receipt.pdf";
             Path uploadPath = uploadDir.resolve(fileName);
             Files.write(uploadPath, file.getBytes());
 
-            // Create and save the reservation
-            Reservation reservation = new Reservation();
-            reservation.setUser(user.get());
-            reservation.setOffer(offer.get());
-            reservation.setReservationDate(java.time.LocalDate.now().toString());
-            reservation.setReceiptPath(uploadPath.toString());
-
+            // Create reservation
+            Reservation reservation = new Reservation(user, offer, java.time.LocalDate.now().toString(), uploadPath.toString());
             reservationService.saveReservation(reservation);
+
+            // Generate and send PDF receipt
+            String userName = user.getFullName();
+            String offerDetails = offer.getDestination().getName() + " - " + offer.getOfferPrice();
+            byte[] pdfReceipt = PdfGenerator.generateReceipt(userName, offerDetails, reservation.getReservationDate());
+
+            try {
+                emailService.sendEmailWithReceipt(
+                        user.getUsername(),
+                        "Your Reservation Receipt",
+                        "Thank you for reserving with us. Please find your receipt attached.",
+                        pdfReceipt
+                );
+            } catch (MessagingException e) {
+                System.err.println("Failed to send email: " + e.getMessage());
+                // Optionally, log the error or notify the admin
+            }
 
             return ResponseEntity.ok("Reservation created successfully");
         } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to save receipt: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save receipt: " + e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An unexpected error occurred: " + e.getMessage());
         }
     }
-
 
 
     @GetMapping("/reservations/{userId}")
