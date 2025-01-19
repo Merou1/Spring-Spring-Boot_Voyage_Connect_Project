@@ -29,7 +29,7 @@ public class Hotel {
     @Column(nullable = false)
     private Double pricePerNight;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "offer_id", nullable = false)
     private Offer offer;
     

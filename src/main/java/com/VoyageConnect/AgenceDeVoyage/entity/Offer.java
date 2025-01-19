@@ -21,7 +21,7 @@ public class Offer {
 	@JoinColumn(name = "destination_id", nullable = false)
 	private Destination destination;
 
-	@OneToOne
+	@OneToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
 	@JoinColumn(name = "flight_id", referencedColumnName = "id")
 	private Flight flight;
 
@@ -34,6 +34,9 @@ public class Offer {
 
 	@Column(nullable = false)
 	private Double offerPrice;
+
+	@Transient
+	private static final double COMPANY_MARKUP = 0.10;
 
 	public Offer(Long id, Destination destination, Flight flight, Hotel hotel, String offerDetails, Double offerPrice) {
 		super();
@@ -73,6 +76,15 @@ public class Offer {
 		this.offerDetails = offerDetails;
 	}
 
+	public void calculateOfferPrice() {
+        double flightPrice = (this.flight != null) ? this.flight.getPrice() : 0.0;
+        double hotelPrice = (this.hotel != null && this.hotel.getPricePerNight() != null)
+                ? this.hotel.getPricePerNight() * 5 // 5 nights in each offer
+                : 0.0;
+
+        this.offerPrice = (flightPrice + hotelPrice) * (1 + COMPANY_MARKUP);
+    }
+
 	public Double getOfferPrice() {
 		return offerPrice;
 	}
@@ -87,7 +99,9 @@ public class Offer {
 
 	public void setFlight(Flight flight) {
 		this.flight = flight;
-	}
+		if (flight != null) {
+	        calculateOfferPrice(); // Recalculate the offer price
+	    }	}
 
 	public Hotel getHotel() {
 		return hotel;
@@ -95,6 +109,7 @@ public class Offer {
 
 	public void setHotel(Hotel hotel) {
 		this.hotel = hotel;
+		calculateOfferPrice();
 	}
 
 }

@@ -1,128 +1,134 @@
 package com.VoyageConnect.AgenceDeVoyage.entity;
 
+import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
-
 import com.fasterxml.jackson.annotation.JsonIdentityInfo;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-@Getter
-@Setter
-@NoArgsConstructor
 @Entity
 @Table(name = "flights")
-
 public class Flight {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-	@Column(nullable = false)
-	private String airline;
+    @Column(nullable = false)
+    private String airline;
 
-	@Column(nullable = false)
-	private String departure;
+    @Column(nullable = false)
+    private String departure;
 
-	@ManyToOne
-	@JoinColumn(name = "destination_id", nullable = false)
-	private Destination destination;
+    @ManyToOne
+    @JoinColumn(name = "destination_id", nullable = false)
+    private Destination destination;
 
-	@Column(nullable = false)
-	private String departureDate;
+    @Column(nullable = false)
+    private String departureDate;
 
-	@Column(nullable = false)
-	private String returnDate;
+    @Column(nullable = false)
+    private String returnDate;
 
-	@Column(nullable = false)
-	private Double price;
+    @Column(nullable = false)
+    private Double price;
 
-	@ManyToOne
-	@JoinColumn(name = "offer_id", nullable = false)
-	private Offer offer;
+    @Column(name = "offer_id")
+    private Long offerId;
 
-	public Flight() {
-		super();
-	}
+    @OneToOne(mappedBy = "flight", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Offer offer;
 
-	public Flight(Long id, String airline, String departure, Destination destination, String departureDate,
-			String returnDate, Double price, Offer offer) {
-		super();
-		this.id = id;
-		this.airline = airline;
-		this.departure = departure;
-		this.destination = destination;
-		this.departureDate = departureDate;
-		this.returnDate = returnDate;
-		this.price = price;
-		this.offer = offer;
-	}
+    // No-argument constructor
+    public Flight() {
+        super();
+    }
 
-	public Long getId() {
-		return id;
-	}
+    // Constructor with all fields
+    public Flight(Long id, String airline, String departure, Destination destination, String departureDate,
+                  String returnDate, Double price, Long offerId, Offer offer) {
+        this.id = id;
+        this.airline = airline;
+        this.departure = departure;
+        this.destination = destination;
+        this.departureDate = departureDate;
+        this.returnDate = returnDate;
+        this.price = price;
+        this.offerId = offerId;
+        this.offer = offer;
+    }
 
-	public void setId(Long id) {
-		this.id = id;
-	}
+    // Getters and Setters
+    public Long getId() {
+        return id;
+    }
 
-	public String getAirline() {
-		return airline;
-	}
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-	public void setAirline(String airline) {
-		this.airline = airline;
-	}
+    public String getAirline() {
+        return airline;
+    }
 
-	public String getDeparture() {
-		return departure;
-	}
+    public void setAirline(String airline) {
+        this.airline = airline;
+    }
 
-	public void setDeparture(String departure) {
-		this.departure = departure;
-	}
+    public String getDeparture() {
+        return departure;
+    }
 
-	public Destination getDestination() {
-		return destination;
-	}
+    public void setDeparture(String departure) {
+        this.departure = departure;
+    }
 
-	public void setDestination(Destination destination) {
-		this.destination = destination;
-	}
+    public Destination getDestination() {
+        return destination;
+    }
 
-	public String getDepartureDate() {
-		return departureDate;
-	}
+    public void setDestination(Destination destination) {
+        this.destination = destination;
+    }
 
-	public void setDepartureDate(String departureDate) {
-		this.departureDate = departureDate;
-	}
+    public String getDepartureDate() {
+        return departureDate;
+    }
 
-	public String getReturnDate() {
-		return returnDate;
-	}
+    public void setDepartureDate(String departureDate) {
+        this.departureDate = departureDate;
+    }
 
-	public void setReturnDate(String returnDate) {
-		this.returnDate = returnDate;
-	}
+    public String getReturnDate() {
+        return returnDate;
+    }
 
-	public Double getPrice() {
-		return price;
-	}
+    public void setReturnDate(String returnDate) {
+        this.returnDate = returnDate;
+    }
 
-	public void setPrice(Double price) {
-		this.price = price;
-	}
+    public Double getPrice() {
+        return price;
+    }
 
-	public Offer getOffer() {
-		return offer;
-	}
+    public void setPrice(Double price) {
+        this.price = price;
+    }
 
-	public void setOffer(Offer offer) {
-		this.offer = offer;
-	}
+    public Long getOfferId() {
+        return offerId;
+    }
 
+    public void setOfferId(Long offerId) {
+        this.offerId = offerId;
+    }
+
+    public Offer getOffer() {
+        return offer;
+    }
+
+    public void setOffer(Offer offer) {
+        this.offer = offer;
+        if (offer != null) {
+            offer.setFlight(this); // Link the flight to the offer
+        }
+    }
 }

@@ -65,32 +65,9 @@ public class FlightService {
         }
         flight.setDestination(destinationOptional.get());
 
-        // Validate offer
-        if (flight.getOffer() == null || flight.getOffer().getId() == null) {
-            throw new RuntimeException("Offer must not be null");
-        }
-
-        // Save the flight first
-        Flight savedFlight = flightRepository.save(flight);
-
-        // Update the offer's flight reference only after successful save
-        if (savedFlight.getOffer() != null) {
-            try {
-                offerService.updateFlightInOffer(savedFlight.getOffer().getId(), savedFlight.getId());
-            } catch (Exception e) {
-                // If updating the offer fails, we might want to roll back the flight save
-                flightRepository.delete(savedFlight);
-                throw new RuntimeException("Failed to update offer with flight: " + e.getMessage());
-            }
-        }
-
-        return savedFlight;
+        // Save the flight
+        return flightRepository.save(flight);
     }
-
-
-
-
-    
 
     public void deleteFlight(Long id) {
         flightRepository.deleteById(id);

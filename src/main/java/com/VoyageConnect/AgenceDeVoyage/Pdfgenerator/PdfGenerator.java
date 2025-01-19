@@ -1,9 +1,11 @@
 package com.VoyageConnect.AgenceDeVoyage.Pdfgenerator;
 
 import com.itextpdf.kernel.pdf.PdfWriter;
+
 import com.itextpdf.layout.Document;
 import com.itextpdf.layout.element.Paragraph;
 import java.io.ByteArrayOutputStream;
+
 
 public class PdfGenerator {
     public static byte[] generateReceipt(String userName, String offerDetails, String reservationDate) {

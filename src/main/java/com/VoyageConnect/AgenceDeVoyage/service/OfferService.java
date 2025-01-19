@@ -9,8 +9,9 @@ import com.VoyageConnect.AgenceDeVoyage.repository.OfferRepository;
 import com.VoyageConnect.AgenceDeVoyage.repository.ReservationRepository;
 import com.VoyageConnect.AgenceDeVoyage.Dtos.OfferDTO;
 
-
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class OfferService {
 
 	@Autowired
@@ -30,6 +32,21 @@ public class OfferService {
 	private FlightRepository flightRepository;
 	@Autowired
 	private HotelRepository hotelRepository;
+	
+	@Autowired
+    private EntityManager entityManager;
+
+	   @Transactional // Add this annotation
+	    public Offer saveOffer(Offer offer) {
+	        if (offer.getId() == null) {
+	            // New entity, use persist
+	            entityManager.persist(offer);
+	        } else {
+	            // Detached entity, use merge
+	            offer = entityManager.merge(offer);
+	        }
+	        return offer;
+	    }
 
 	public OfferDTO mapToOfferDTO(Offer offer) {
 	    return new OfferDTO(
@@ -64,9 +81,7 @@ public class OfferService {
 		return offerRepository.findById(id);
 	}
 
-	public Offer saveOffer(Offer offer) {
-		return offerRepository.save(offer);
-	}
+
 
 
 
@@ -110,29 +125,44 @@ public class OfferService {
 		return reservationCount < 10;
 	}
 	
-	public void updateFlightInOffer(Long offerId, Long flightId) {
+	@Transactional
+    public void updateFlightInOffer(Long offerId, Long flightId) {
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
         if (optionalOffer.isPresent()) {
             Offer offer = optionalOffer.get();
             Flight flight = new Flight();
-            flight.setId(flightId); // Only set the ID to avoid unnecessary DB fetch
+            flight.setId(flightId);
             offer.setFlight(flight);
-            offerRepository.save(offer);
+            offer.calculateOfferPrice(); // Recalculate the offer price
+            offerRepository.save(offer); // Save the updated offer
         } else {
             throw new EntityNotFoundException("Offer with ID " + offerId + " not found.");
         }
     }
-	public void updateHotelInOffer(Long offerId, Long hotelId) {
+
+    @Transactional
+    public void updateHotelInOffer(Long offerId, Long hotelId) {
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
         if (optionalOffer.isPresent()) {
             Offer offer = optionalOffer.get();
             Hotel hotel = new Hotel();
-            hotel.setId(hotelId); // Only set the ID to avoid unnecessary DB fetch
+            hotel.setId(hotelId);
             offer.setHotel(hotel);
-            offerRepository.save(offer);
+            offer.calculateOfferPrice(); // Recalculate the offer price
+            offerRepository.save(offer); // Save the updated offer
         } else {
             throw new EntityNotFoundException("Offer with ID " + offerId + " not found.");
         }
+    }
+
+	
+	@Transactional
+    public void updateHotelInOfferWithoutCascade(Long offerId, Long hotelId) {
+        // Use native query to update offer without triggering cascading updates
+        entityManager.createNativeQuery("UPDATE offers SET hotel_id = ? WHERE id = ?")
+            .setParameter(1, hotelId)
+            .setParameter(2, offerId)
+            .executeUpdate();
     }
 	
 }

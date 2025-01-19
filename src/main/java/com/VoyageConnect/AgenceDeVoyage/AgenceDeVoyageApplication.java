@@ -9,8 +9,10 @@ import com.VoyageConnect.AgenceDeVoyage.repository.DestinationRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
+@EnableTransactionManagement // Add this annotation
 public class AgenceDeVoyageApplication implements CommandLineRunner {
 
     private final RoleRepository roleRepository;

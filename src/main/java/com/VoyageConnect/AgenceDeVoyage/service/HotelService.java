@@ -4,6 +4,9 @@ import com.VoyageConnect.AgenceDeVoyage.entity.Hotel;
 import com.VoyageConnect.AgenceDeVoyage.entity.Offer;
 import com.VoyageConnect.AgenceDeVoyage.repository.HotelRepository;
 import com.VoyageConnect.AgenceDeVoyage.repository.OfferRepository;
+
+import jakarta.transaction.Transactional;
+
 import com.VoyageConnect.AgenceDeVoyage.Dtos.HotelDTO;
 
 
@@ -44,13 +47,19 @@ public class HotelService {
         return hotelRepository.findById(id);
     }
 
+    @Transactional
     public Hotel saveHotel(Hotel hotel) {
+        // Validate before saving
+        if (hotel.getLocation() == null || hotel.getLocation().trim().isEmpty()) {
+            throw new IllegalArgumentException("Location cannot be null or empty");
+        }
+        
+        // Save the hotel first
         Hotel savedHotel = hotelRepository.save(hotel);
-        Offer offer = savedHotel.getOffer();
-
-        // Update the related Offer's hotel_id
-        if (offer != null) {
-            offerService.updateHotelInOffer(offer.getId(), savedHotel.getId());
+        
+        // Update the offer without triggering another hotel update
+        if (savedHotel.getOffer() != null) {
+            offerService.updateHotelInOfferWithoutCascade(savedHotel.getOffer().getId(), savedHotel.getId());
         }
 
         return savedHotel;

@@ -91,34 +91,45 @@ public class AdminController {
 	// Offer CRUD
 	@PostMapping("/offer")
 	public ResponseEntity<Offer> createOffer(@RequestBody Offer offer) {
-		// Ensure destinationId is not null or invalid
-		if (offer.getDestination() == null || offer.getDestination().getId() == null) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Destination must be set in the offer
-		}
+	    // Ensure destinationId is not null or invalid
+	    if (offer.getDestination() == null || offer.getDestination().getId() == null) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Destination must be set in the offer
+	    }
 
-		// Retrieve the destination from the database
-		Optional<Destination> destination = destinationService.getDestinationById(offer.getDestination().getId());
-		if (!destination.isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Destination must exist
-		}
+	    // Retrieve the destination from the database
+	    Optional<Destination> destination = destinationService.getDestinationById(offer.getDestination().getId());
+	    if (!destination.isPresent()) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Destination must exist
+	    }
 
-		// Set the actual Destination object in the Offer
-		offer.setDestination(destination.get());
+	    // Set the actual Destination object in the Offer
+	    offer.setDestination(destination.get());
 
-		// Optional: Check for flights or hotels and associate them as needed.
-		if (offer.getFlight() != null && !flightService.getFlightById(offer.getFlight().getId()).isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Flight not found
-		}
+	    // Validate Flight
+	    if (offer.getFlight() != null) {
+	        Optional<Flight> flightOptional = flightService.getFlightById(offer.getFlight().getId());
+	        if (!flightOptional.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Flight not found
+	        }
+	        offer.setFlight(flightOptional.get()); // Set the actual Flight object
+	    }
 
-		if (offer.getHotel() != null && !hotelService.getHotelById(offer.getHotel().getId()).isPresent()) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Hotel not found
-		}
+	    // Validate Hotel
+	    if (offer.getHotel() != null) {
+	        Optional<Hotel> hotelOptional = hotelService.getHotelById(offer.getHotel().getId());
+	        if (!hotelOptional.isPresent()) {
+	            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Hotel not found
+	        }
+	        offer.setHotel(hotelOptional.get()); // Set the actual Hotel object
+	    }
 
-		// Save the offer and return the response
-		Offer savedOffer = offerService.saveOffer(offer);
-		return ResponseEntity.status(HttpStatus.CREATED).body(savedOffer);
+	    // Calculate the offer price
+	    offer.calculateOfferPrice();
+
+	    // Save the offer and return the response
+	    Offer savedOffer = offerService.saveOffer(offer);
+	    return ResponseEntity.status(HttpStatus.CREATED).body(savedOffer);
 	}
-
 	@GetMapping("/offers")
 	public List<OfferDTO> getAllOffers() {
 		return offerService.getAllOffers();
@@ -167,6 +178,8 @@ public class AdminController {
 	             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 	         }
 	     }
+	     offer.calculateOfferPrice();
+	     
 
 	     // Save the updated offer and return the response
 	     Offer savedOffer = offerService.saveOffer(offer);
@@ -178,7 +191,7 @@ public class AdminController {
 			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
 					.body("Cannot delete offer with associated reservations.");
 		}
-		offerService.deleteOffer(id);
+		offerService.deleteOffer(id);	
 		return ResponseEntity.ok("Offer with ID " + id + " has been deleted.");
 	}
 
