@@ -121,15 +121,23 @@
 		    } else {
 		        return ResponseEntity.notFound().build();
 		    }
-		}
+		}		
 		@DeleteMapping("/{id}")
 		public ResponseEntity<String> deleteHotel(@PathVariable Long id) {
-			if (!hotelService.getHotelById(id).isPresent()) {
-				return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Hotel not found.");
-			} else {
-				hotelService.deleteHotel(id);
-				return ResponseEntity.ok("Hotel with ID " + id + " has been deleted.");
-			}
+		    Optional<Hotel> hotelOptional = hotelService.getHotelById(id);
+		    if (hotelOptional.isEmpty()) {
+		        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Hotel not found.");
+		    }
+
+		    // Check if the hotel is referenced by any offer
+		    if (offerService.isHotelReferencedByOffer(id)) {
+		        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+		                .body("Cannot delete hotel because it is referenced by an offer.");
+		    }
+
+		    // Delete the hotel
+		    hotelService.deleteHotel(id);
+		    return ResponseEntity.ok("Hotel with ID " + id + " has been deleted.");
 		}
 	
 		@PostMapping("/upload-image")

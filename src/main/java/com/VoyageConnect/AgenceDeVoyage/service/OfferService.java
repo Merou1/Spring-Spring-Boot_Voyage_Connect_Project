@@ -165,4 +165,12 @@ public class OfferService {
             .executeUpdate();
     }
 	
+	public boolean isHotelReferencedByOffer(Long hotelId) {
+        return offerRepository.existsByHotelId(hotelId);
+    }
+
+    public boolean isFlightReferencedByOffer(Long flightId) {
+        return offerRepository.existsByFlightId(flightId);
+    }
+	
 }

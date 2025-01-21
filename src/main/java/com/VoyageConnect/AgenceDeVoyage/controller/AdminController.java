@@ -148,23 +148,19 @@ public class AdminController {
 	     if (!existingOfferOpt.isPresent()) {
 	         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 	     }
-	     
+
 	     Offer existingOffer = existingOfferOpt.get();
 
-	     // Preserve existing flight and hotel
-	     offer.setFlight(existingOffer.getFlight());
-	     offer.setHotel(existingOffer.getHotel());
-	     
+	     // Update the existing offer with the new values
+	     existingOffer.setOfferDetails(offer.getOfferDetails());
+
 	     // Ensure the destination exists and is valid
 	     if (offer.getDestination() == null
 	             || !destinationService.getDestinationById(offer.getDestination().getId()).isPresent()) {
 	         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	     }
 
-	     // Set the offer id to maintain consistency
-	     offer.setId(id);
-
-	     // Set the destination explicitly to ensure it's not null
+	     // Update the destination
 	     Destination destination = offer.getDestination();
 	     if (destination != null && destination.getId() != null) {
 	         Optional<Destination> existingDestination = destinationService.getDestinationById(destination.getId());
@@ -173,28 +169,64 @@ public class AdminController {
 	             if (updatedDestination.getCountry() == null) {
 	                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
 	             }
-	             offer.setDestination(updatedDestination);
+	             existingOffer.setDestination(updatedDestination);
 	         } else {
 	             return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
 	         }
 	     }
-	     offer.calculateOfferPrice();
-	     
+
+	     // Update flight and hotel if they are provided
+	     if (offer.getFlight() != null) {
+	         Optional<Flight> flightOptional = flightService.getFlightById(offer.getFlight().getId());
+	         if (flightOptional.isPresent()) {
+	             existingOffer.setFlight(flightOptional.get());
+	         } else {
+	             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Flight not found
+	         }
+	     }
+
+	     if (offer.getHotel() != null) {
+	         Optional<Hotel> hotelOptional = hotelService.getHotelById(offer.getHotel().getId());
+	         if (hotelOptional.isPresent()) {
+	             existingOffer.setHotel(hotelOptional.get());
+	         } else {
+	             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null); // Hotel not found
+	         }
+	     }
+
+	     // Recalculate the offer price
+	     existingOffer.calculateOfferPrice();
 
 	     // Save the updated offer and return the response
-	     Offer savedOffer = offerService.saveOffer(offer);
+	     Offer savedOffer = offerService.saveOffer(existingOffer);
 	     return ResponseEntity.ok(savedOffer);
 	 }
-	@DeleteMapping("/offer/{id}")
-	public ResponseEntity<String> deleteOffer(@PathVariable Long id) {
-		if (reservationService.hasReservationsForOffer(id)) {
-			return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-					.body("Cannot delete offer with associated reservations.");
-		}
-		offerService.deleteOffer(id);	
-		return ResponseEntity.ok("Offer with ID " + id + " has been deleted.");
-	}
+	 @DeleteMapping("/offer/{id}")
+	 public ResponseEntity<String> deleteOffer(@PathVariable Long id) {
+	     Optional<Offer> offerOptional = offerService.getOfferById(id);
+	     if (offerOptional.isEmpty()) {
+	         return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Offer not found.");
+	     }
 
+	     Offer offer = offerOptional.get();
+
+	     // Delete related reservations first
+	     if (!offer.getReservations().isEmpty()) {
+	         reservationService.deleteReservationsByOfferId(id);
+	     }
+
+	     // Clear the hotel reference in the offer first
+	     if (offer.getHotel() != null) {
+	         Hotel hotel = offer.getHotel();
+	         offer.setHotel(null);
+	         offerService.saveOffer(offer); // Save the offer without the hotel reference
+	         hotelService.deleteHotel(hotel.getId()); // Now delete the hotel
+	     }
+
+	     // Finally delete the offer
+	     offerService.deleteOffer(id);
+	     return ResponseEntity.ok("Offer with ID " + id + " has been deleted.");
+	 }
 	// Reservation CRUD
 	@PostMapping("/reservation")
 	public ResponseEntity<Reservation> createReservation(

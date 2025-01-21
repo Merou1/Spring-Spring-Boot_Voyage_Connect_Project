@@ -115,7 +115,14 @@ public class Hotel {
 	}
 
 	public void setOffer(Offer offer) {
-		this.offer = offer;
+	    Offer oldOffer = this.offer;
+	    this.offer = offer;
+	    if (oldOffer != null && oldOffer.getHotel() == this) {
+	        oldOffer.setHotel(null);
+	    }
+	    if (offer != null && offer.getHotel() != this) {
+	        offer.setHotel(this);
+	    }
 	}
     
 	public String getImageUrl() {

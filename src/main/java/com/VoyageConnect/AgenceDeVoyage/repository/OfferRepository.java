@@ -25,6 +25,9 @@ public interface OfferRepository extends JpaRepository<Offer, Long> {
     List<Offer> findByDestination_CountryAndOfferPriceBetween(String country, Double minPrice, Double maxPrice);
     
     List<Offer> findByFlightId(Long flightId); // Custom query to find offers by flight ID
+    
+    boolean existsByHotelId(Long hotelId);
+    boolean existsByFlightId(Long flightId);
 
 
 }

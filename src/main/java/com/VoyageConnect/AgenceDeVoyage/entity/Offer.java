@@ -1,5 +1,8 @@
 package com.VoyageConnect.AgenceDeVoyage.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 import jakarta.persistence.*;
@@ -21,13 +24,16 @@ public class Offer {
 	@JoinColumn(name = "destination_id", nullable = false)
 	private Destination destination;
 
-	@OneToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-	@JoinColumn(name = "flight_id", referencedColumnName = "id")
-	private Flight flight;
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "flight_id", referencedColumnName = "id")
+    private Flight flight;
 
-	@OneToOne
-	@JoinColumn(name = "hotel_id", nullable = true)
-	private Hotel hotel;
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "hotel_id", nullable = true)
+    private Hotel hotel;
+	
+	@OneToMany(mappedBy = "offer", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Reservation> reservations = new ArrayList<>();
 
 	@Column(nullable = false)
 	private String offerDetails;
@@ -108,8 +114,22 @@ public class Offer {
 	}
 
 	public void setHotel(Hotel hotel) {
-		this.hotel = hotel;
-		calculateOfferPrice();
+	    Hotel oldHotel = this.hotel;
+	    this.hotel = hotel;
+	    if (oldHotel != null && oldHotel.getOffer() == this) {
+	        oldHotel.setOffer(null);
+	    }
+	    if (hotel != null && hotel.getOffer() != this) {
+	        hotel.setOffer(this);
+	    }
+	    calculateOfferPrice();
 	}
 
+	public List<Reservation> getReservations() {
+        return reservations;
+    }
+
+    public void setReservations(List<Reservation> reservations) {
+        this.reservations = reservations;
+    }
 }

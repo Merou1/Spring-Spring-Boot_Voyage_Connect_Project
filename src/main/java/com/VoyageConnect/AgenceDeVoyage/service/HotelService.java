@@ -64,12 +64,12 @@ public class HotelService {
 
         return savedHotel;
     }
-
+    @Transactional
     public void deleteHotel(Long id) {
         hotelRepository.deleteById(id);
     }
     public List<Hotel> getHotelsForOffer(Long offerId) {
         return hotelRepository.findByOfferId(offerId);
     }
-
+    
 }

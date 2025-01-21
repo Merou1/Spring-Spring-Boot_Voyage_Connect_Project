@@ -118,12 +118,19 @@ public class FlightController {
 
 	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteFlight(@PathVariable Long id) {
-		if (!flightService.getFlightById(id).isPresent()) {
-			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Flight not found.");
-		} else {
-			flightService.deleteFlight(id);
-			return ResponseEntity.ok("Flight with ID " + id + " has been deleted.");
-		}
+	    Optional<Flight> flightOptional = flightService.getFlightById(id);
+	    if (flightOptional.isEmpty()) {
+	        return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Flight not found.");
+	    }
 
+	    // Check if the flight is referenced by any offer
+	    if (offerService.isFlightReferencedByOffer(id)) {
+	        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	                .body("Cannot delete flight because it is referenced by an offer.");
+	    }
+
+	    // Delete the flight
+	    flightService.deleteFlight(id);
+	    return ResponseEntity.ok("Flight with ID " + id + " has been deleted.");
 	}
 }
